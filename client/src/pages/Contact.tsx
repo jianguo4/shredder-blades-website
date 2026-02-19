@@ -3,23 +3,76 @@
  * Two-column layout with factory background
  */
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/layout/Navbar";
 import { Mail, MapPin, MessageSquare, Phone, Send } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Contact() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success("Message sent successfully! We'll get back to you soon.");
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          company: "",
+          message: "",
+        });
+      } else {
+        // Handle validation errors
+        if (data.errors && Array.isArray(data.errors)) {
+          data.errors.forEach((error: any) => {
+            toast.error(error.message || "Validation error");
+          });
+        } else {
+          toast.error(data.message || "Failed to send message. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("An error occurred. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -28,11 +81,12 @@ export default function Contact() {
       <section className="relative pt-32 pb-24 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://private-us-east-1.manuscdn.com/sessionFile/atwthpmfUJ1KdGMP3YZhNS/sandbox/JHe2l9yPfpfDg5Wy1OgpOo-img-2_1770202043000_na1fn_c2hyZWRkZXItbWFjaGluZS1vcGVyYXRpb24.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvYXR3dGhwbWZVSjFLZEdNUDNZWmhOUy9zYW5kYm94L0pIZTJsOXlQZnBmRGc1V3kxT2dwT28taW1nLTJfMTc3MDIwMjA0MzAwMF9uYTFmbl9jMmh5WldSa1pYSXRiV0ZqYUdsdVpTMXZjR1Z5WVhScGIyNC5wbmc~eC1vc3MtcHJvY2Vzcz1pbWFnZS9yZXNpemUsd18xOTIwLGhfMTkyMC9mb3JtYXQsd2VicC9xdWFsaXR5LHFfODAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=m2YQ~h4KExwt4q43UV1NAPaNgcAMVusyYgM4eep8-2x9B~SLKoNRbJj3zI0brtto5euOQXjlHhPVKvKphfEEz8BWSMjJQAm22n9Zre0aICxGkHnerUtXMnfUCZNHLKWvqD6dy53E~C8XCXT2O2dEwdSO4t9FS8cx8Q~P4~P2OrhKT-Avv39qM1OdA~cLAC6snVpcv71DLPZ6WFh9WUvtMKKPtPUesww-yKxuoSt4UUGChDEWXxMMoX~s5bgWKctxOyHl9Uw8OSjdBGB-IhOb8x2ONQe8H6~G-AKGtDCkQROUwbtLzuC2g8ktpz8KORorAj4DJ-K66X5of-SDFW512g__"
+            src="/images/common/metal-industrial-1.webp"
             alt="Factory"
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/80 to-background"></div>
         </div>
 
         <div className="container relative z-10">
@@ -42,7 +96,8 @@ export default function Contact() {
               <span className="block text-primary mt-2">TOUCH</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground">
-              Request a quote, ask technical questions, or discuss your blade requirements
+              Request a quote, ask technical questions, or discuss your blade
+              requirements
             </p>
           </div>
         </div>
@@ -51,39 +106,48 @@ export default function Contact() {
       {/* Two Column Layout */}
       <section className="py-24 bg-background">
         <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-7xl mx-auto items-stretch">
             {/* Left Column - Contact Form */}
-            <div>
-              <Card className="bg-card border-border">
+            <div className="flex">
+              <Card className="bg-card border-border w-full">
                 <CardContent className="p-8 space-y-6">
                   <div className="space-y-3">
                     <h2 className="text-3xl font-bold text-foreground">
                       Send Us a Message
                     </h2>
                     <p className="text-muted-foreground">
-                      Fill out the form and we'll get back to you within 24-48 hours
+                      Fill out the form and we'll get back to you within 24-48
+                      hours
                     </p>
                   </div>
 
-                  <form className="space-y-6">
+                  <form className="space-y-6" onSubmit={handleSubmit}>
                     {/* Personal Info */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name" className="text-foreground">Full Name *</Label>
+                        <Label htmlFor="name" className="text-foreground">
+                          Full Name *
+                        </Label>
                         <Input
                           id="name"
                           placeholder="John Smith"
                           className="bg-background border-border"
+                          value={formData.name}
+                          onChange={handleChange}
                           required
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="text-foreground">Email *</Label>
+                        <Label htmlFor="email" className="text-foreground">
+                          Email *
+                        </Label>
                         <Input
                           id="email"
                           type="email"
                           placeholder="john@company.com"
                           className="bg-background border-border"
+                          value={formData.email}
+                          onChange={handleChange}
                           required
                         />
                       </div>
@@ -91,48 +155,43 @@ export default function Contact() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="company" className="text-foreground">Company</Label>
+                        <Label htmlFor="company" className="text-foreground">
+                          Company
+                        </Label>
                         <Input
                           id="company"
                           placeholder="Your Company Ltd."
                           className="bg-background border-border"
+                          value={formData.company}
+                          onChange={handleChange}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-foreground">Phone</Label>
+                        <Label htmlFor="phone" className="text-foreground">
+                          Phone
+                        </Label>
                         <Input
                           id="phone"
                           type="tel"
                           placeholder="+1 (555) 123-4567"
                           className="bg-background border-border"
+                          value={formData.phone}
+                          onChange={handleChange}
                         />
                       </div>
                     </div>
 
-                    {/* Inquiry Details */}
                     <div className="space-y-2">
-                      <Label htmlFor="inquiry-type" className="text-foreground">Inquiry Type *</Label>
-                      <Select required>
-                        <SelectTrigger className="bg-background border-border">
-                          <SelectValue placeholder="Select inquiry type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="quote">Request a Quote</SelectItem>
-                          <SelectItem value="technical">Technical Question</SelectItem>
-                          <SelectItem value="order">Order Status</SelectItem>
-                          <SelectItem value="partnership">Partnership</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="message" className="text-foreground">Message *</Label>
+                      <Label htmlFor="message" className="text-foreground">
+                        Message *
+                      </Label>
                       <Textarea
                         id="message"
                         placeholder="Please provide details about your inquiry..."
                         rows={6}
                         className="bg-background border-border"
+                        value={formData.message}
+                        onChange={handleChange}
                         required
                       />
                     </div>
@@ -141,8 +200,9 @@ export default function Contact() {
                       type="submit"
                       size="lg"
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg py-6 animate-forge-pulse"
+                      disabled={isSubmitting}
                     >
-                      Send Message
+                      {isSubmitting ? "Sending..." : "Send Message"}
                       <Send className="ml-2" size={20} />
                     </Button>
                   </form>
@@ -151,9 +211,9 @@ export default function Contact() {
             </div>
 
             {/* Right Column - Contact Info */}
-            <div>
+            <div className="flex">
               {/* Contact Information */}
-              <Card className="bg-card border-border">
+              <Card className="bg-card border-border w-full">
                 <CardContent className="p-8 space-y-6">
                   <div className="space-y-3">
                     <h2 className="text-3xl font-bold text-foreground">
@@ -163,16 +223,22 @@ export default function Contact() {
                       Reach out to us through any of these channels
                     </p>
                   </div>
-                  
+
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-sm bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <Phone className="text-primary" size={24} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-foreground mb-1">Phone</h4>
-                        <p className="text-muted-foreground">+86 155 5175 7389</p>
-                        <p className="text-sm text-muted-foreground">Mon-Fri 9AM-6PM CST</p>
+                        <h4 className="font-bold text-foreground mb-1">
+                          Phone
+                        </h4>
+                        <p className="text-muted-foreground">
+                          +86 155 5175 7389
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Mon-Fri 9AM-6PM CST
+                        </p>
                       </div>
                     </div>
 
@@ -181,9 +247,15 @@ export default function Contact() {
                         <MessageSquare className="text-primary" size={24} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-foreground mb-1">WhatsApp</h4>
-                        <p className="text-muted-foreground">+86 155 5175 7389</p>
-                        <p className="text-sm text-muted-foreground">24/7 Available</p>
+                        <h4 className="font-bold text-foreground mb-1">
+                          WhatsApp
+                        </h4>
+                        <p className="text-muted-foreground">
+                          +86 155 5175 7389
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          24/7 Available
+                        </p>
                       </div>
                     </div>
 
@@ -192,8 +264,12 @@ export default function Contact() {
                         <Mail className="text-primary" size={24} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-foreground mb-1">Email</h4>
-                        <p className="text-muted-foreground">info@shredderbladesdirect.com</p>
+                        <h4 className="font-bold text-foreground mb-1">
+                          Email
+                        </h4>
+                        <p className="text-muted-foreground">
+                          info@shredderbladesdirect.com
+                        </p>
                       </div>
                     </div>
 
@@ -202,9 +278,12 @@ export default function Contact() {
                         <MapPin className="text-primary" size={24} />
                       </div>
                       <div>
-                        <h4 className="font-bold text-foreground mb-1">Address</h4>
+                        <h4 className="font-bold text-foreground mb-1">
+                          Address
+                        </h4>
                         <p className="text-muted-foreground">
-                          Bowang High-tech Industrial Development Zone<br />
+                          Bowang High-tech Industrial Development Zone
+                          <br />
                           Ma'anshan City, China
                         </p>
                       </div>
@@ -212,8 +291,6 @@ export default function Contact() {
                   </div>
                 </CardContent>
               </Card>
-
-
             </div>
           </div>
         </div>

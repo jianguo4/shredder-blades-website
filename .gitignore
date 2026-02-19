@@ -38,6 +38,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.manus-logs/
 
 # Runtime data
 pids
@@ -99,8 +100,15 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
+tmpclaude-*-cwd
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+data/
+prisma/migrations/
+
+# Vercel
+.vercel
+.env*.local

@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
+import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -10,29 +11,41 @@ import Materials from "./pages/Materials";
 import Custom from "./pages/Custom";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import ProductDetail from "./pages/ProductDetail";
-import ProductDetailMetal from "./pages/ProductDetailMetal";
-import ProductDetailPlastic from "./pages/ProductDetailPlastic";
+import ProductSingle from "./pages/Singleshaftblades";
+import ProductMutil from "./pages/Mutilshaftblades";
 import Applications from "./pages/Applications";
+import Admin from "./pages/Admin";
 
+function ScrollToTop() {
+  const [location] = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  return null;
+}
 
 function Router() {
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/products"} component={Products} />
-      <Route path={"/products/single-shaft"} component={ProductDetail} />
-      <Route path={"/products/metal"} component={ProductDetailMetal} />
-      <Route path={"/products/plastic"} component={ProductDetailPlastic} />
-      <Route path={"/materials"} component={Materials} />
-      <Route path={"/custom"} component={Custom} />
-      <Route path={"/about"} component={About} />
-      <Route path={"/contact"} component={Contact} />
-      <Route path={"/applications"} component={Applications} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <ScrollToTop />
+      <Switch>
+        <Route path={"/"} component={Home} />
+        <Route path={"/products"} component={Products} />
+        <Route path={"/products/single-shaft-shredder-blades"} component={ProductSingle} />
+        <Route path={"/products/multi-shaft-shredder-blades"} component={ProductMutil} />
+        <Route path={"/materials"} component={Materials} />
+        <Route path={"/custom"} component={Custom} />
+        <Route path={"/about"} component={About} />
+        <Route path={"/contact"} component={Contact} />
+        <Route path={"/applications"} component={Applications} />
+        <Route path={"/admin"} component={Admin} />
+        <Route path={"/404"} component={NotFound} />
+        {/* Final fallback route */}
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 
@@ -44,9 +57,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="dark"
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />
